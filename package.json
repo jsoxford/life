@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jsoxford/life",
   "dependencies": {
-    "express": "^4.4.3"
+    "express": "^4.4.3",
+    "socket.io": "^1.0.4"
   }
 }
