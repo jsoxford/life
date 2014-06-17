@@ -1,0 +1,22 @@
+{
+  "name": "life",
+  "version": "0.0.0",
+  "description": "Game of life runner",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsoxford/life.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jsoxford/life/issues"
+  },
+  "homepage": "https://github.com/jsoxford/life",
+  "dependencies": {
+    "express": "^4.4.3"
+  }
+}
