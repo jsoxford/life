@@ -2,24 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-
-// Set up PubNub bits
-var pubnub = require("pubnub").init({
-    publish_key   : "pub-c-3819ce76-a6c1-4514-9d89-fc9808fec1df",
-    subscribe_key : "sub-c-e45a82c6-f844-11e3-bafe-02ee2ddab7fe"
-});
-
-// Whenever we get a new client, add it to the list
-var sessions = [];
-pubnub.subscribe({
-    channel  : "cf_gol_capabilities",
-    callback : function(message) {
-      message.lastContact = new Date();
-      sessions[message.processUUID + '-' + message.responderId] = message;
-      console.log("----");
-      console.log(sessions);
-    }
-});
+var net = require('net');
 
 app.use(express.static(__dirname + '/public'));
 
@@ -32,13 +15,37 @@ setInterval(function(){
   }
 
   io.emit('state', {
-    world:world,
-    players:sessions
-    });
+    world:world
+  });
 }, 1000)
 
 
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
+});
+
+
+var server = net.createServer(function(c) {
+  console.log('client connected');
+
+  c.on('end', function() {
+    console.log('client disconnected');
+  });
+
+  // would be more sane, but this is just a hack for now
+  var problem = '000110000';
+  c.write(problem);
+
+  console.log(">>  problem - " + problem);
+
+  c.on('data', function(data){
+    console.log("<< solution - " + data.toString());
+  })
+
+});
+
+
+server.listen(3001, function() {
+  console.log('player listener on *:3001');
 });
