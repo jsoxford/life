@@ -12,3 +12,8 @@ node index.js
 ```
 node example.js
 ```
+
+### SEE THE GAME
+
+[locahost:3000](http://localhost:3000)
+
