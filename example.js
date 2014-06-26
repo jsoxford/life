@@ -8,27 +8,18 @@ var client = net.connect({port: 3001}, function() {
 
 client.on('data', function(data) {
   var message = data.toString();
-
-  console.log("received> " + message)
+  
+  console.log(">received> " + message)
   
   var data = message.split('')
 
-  console.log(data);
-
   // bad solution (flip the numbers)
-  var solution = data.map(function(i){return i == '0' ? '1': '0'})
+  var solution = data.map(function(i){return i == '0' ? '1': '0'}).join('')
 
-  client.write(solution.join(''));
+  console.log("<sending<  " + solution)
 
+  client.write(solution);
 
-
-  // fake solution (flip the values)
-
-  // var solution = data.map(function(p){return !p});
-
-  // client.send(solution.map(function(){})
-
-  // client.end();
 });
 client.on('end', function() {
   console.log('client disconnected');
