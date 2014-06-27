@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/jsoxford/life",
   "dependencies": {
+    "JSONStream": "^0.8.4",
+    "event-stream": "^3.1.5",
     "express": "^4.4.3",
     "socket.io": "^1.0.4"
   }

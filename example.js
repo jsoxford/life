@@ -1,26 +1,60 @@
-// an example cli player
-
-var net = require('net');
-var client = net.connect({port: 3001}, function() {
-  console.log('connected');
-});
 
 
-client.on('data', function(data) {
-  var message = data.toString();
-  
-  console.log(">received> " + message)
-  
-  var data = message.split('')
+function implementation(array){
 
-  // bad solution (flip the numbers)
-  var solution = data.map(function(i){return i == '0' ? '1': '0'}).join('')
+  // flip values
+  return array.map(function(i){
+    return !i
+  })
 
-  console.log("<sending<  " + solution)
+}
 
-  client.write(solution);
 
-});
-client.on('end', function() {
-  console.log('client disconnected');
-});
+// --- the other stuff
+var net = require('net'),
+    JSONStream = require('JSONStream'),
+    es = require('event-stream');
+
+
+var client = net.connect({port: 3001}, function() {console.log('connected') });
+
+client
+  .pipe(JSONStream.parse(true))
+  .pipe(es.mapSync(process))
+
+
+// process a message from the server
+function process(message){
+  console.log(">>>>", message);
+  if(message.action === 'processIteration'){
+    var id       = Object.keys(message.payload)[0],
+        data     = message.payload[id],
+        solution = str2bin(implementation)(data),
+        response = {
+          respondingTo: "processIteration",
+          payload:{}
+        };
+
+    response.payload[id] = solution;
+
+    client.write(JSON.stringify(response));
+
+    console.log("<<<<", response);
+  }
+}
+
+
+function str2bin(fn){
+  return function(str){
+    return fn(
+      str.split('').map(b)
+    ).map(s).join('')
+  }
+  function b(v){
+    return v == '1'
+  }
+  function s(v){
+    return v ? '1':'0'
+  }
+}
+
