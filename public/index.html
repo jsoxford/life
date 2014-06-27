@@ -1,9 +1,13 @@
 <html>
 <head>
   <title>Life</title>
+  <style type="text/css">
+    body{
+      margin:0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello world</h1>
   <canvas id="world" width="500" height="500"></canvas>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -22,6 +26,19 @@
         }
       }
     });
+
+
+
+    world.addEventListener('click', function(e){
+      console.log(e);
+      var x = Math.floor((e.pageX/world.width)*width),
+          y = Math.floor((e.pageY/world.height)*height);
+
+      socket.emit('on', [x,y]);
+
+      ctx.fillStyle = '#ccc'
+      ctx.fillRect(x,y,1,1);
+    }, false)
 
   </script>
 </body>
