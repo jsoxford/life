@@ -29,15 +29,22 @@
 
 
 
-    world.addEventListener('click', function(e){
+    var lastI;
+
+    world.addEventListener('mousemove', function(e){
       console.log(e);
       var x = Math.floor((e.pageX/world.width)*width),
           y = Math.floor((e.pageY/world.height)*height);
 
-      socket.emit('on', [x,y]);
+      if(lastI!=(x + (y*width))){
+        lastI=(x + (y*width))
 
-      ctx.fillStyle = '#ccc'
-      ctx.fillRect(x,y,1,1);
+        socket.emit('on', [x,y]);
+
+        ctx.fillStyle = '#ccc'
+        ctx.fillRect(x,y,1,1);
+
+      }
     }, false)
 
   </script>

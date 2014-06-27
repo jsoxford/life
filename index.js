@@ -140,10 +140,8 @@ io.on('connection', function (socket) {
   });
 
   socket.on('on', function (data) {
-    console.log(data);
     var x = data[0], y = data[1];
     var i = x + (y*width);
-    console.log(i);
     if(world[i] !== undefined){
       world[i] = false;
     }
