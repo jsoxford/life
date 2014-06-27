@@ -8,14 +8,16 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    var width = 20, height = 20;
+
     var socket = io();
     var ctx = world.getContext('2d');
-    ctx.scale(50,50);
+    ctx.scale(world.width/width,world.height/height);
 
     socket.on('state', function(data){
-      for(var x = 0; x < 10; x++){
-        for(var y = 0; y < 10; y++){
-          ctx.fillStyle = data.world[x + (10*y)] ? '#fff' : '#000';
+      for(var x = 0; x < width; x++){
+        for(var y = 0; y < height; y++){
+          ctx.fillStyle = data.world[x + (width*y)] ? '#fff' : '#000';
           ctx.fillRect(x,y,1,1);
         }
       }

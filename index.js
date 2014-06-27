@@ -17,16 +17,16 @@ var clients = {}; // id: socket
 
 var client_id = 0, problem_id = 0;
 
+var width = 20,
+    height = 20;
 
 // todo - use buffer
-var width = 10,
-    height = 10;
-
 var world = new Array(width*height);
 
 for (var i = world.length - 1; i >= 0; i--) {
   world[i] = Math.random() > .5;
 }
+// console.log(world.length)
 
 
 // read and write parts of the world
@@ -143,10 +143,10 @@ io.on('connection', function (socket) {
 
 setInterval(function(){
 
-  // ask a player for a solution to part of the worl
+  // ask a player for a solution to part of the world
   var player = Object.keys(clients)[0];
   if(player){
-    dispatch(player, 0, 0, 5, 5);
+    dispatch(player, 0, 0, 10, 10);
   }
 
 }, 1000)
