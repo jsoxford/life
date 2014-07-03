@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 var net = require('net');
 var JSONStream = require('JSONStream');
 var es = require('event-stream');
+var fs = require('fs');
 
 
 app.use(express.static(__dirname + '/public'));
@@ -21,6 +22,7 @@ var clientStats = {
 };
 var client_id = 0, problem_id = 0;
 
+var statsFile = 'stats.log';
 var width = 20,
     height = 20;
 
@@ -108,7 +110,6 @@ function process(data){
     })
   }
   else if(data.action === 'consumeTestResults'){
-      console.log(data.payload);
     clientStats.testsRun += data.payload.testsRun;
     clientStats.testsFailed += data.payload.testsFailed;
     clientStats.testsIgnored += data.payload.testsIgnored;
@@ -117,6 +118,20 @@ function process(data){
       world:world,
       clientStats:clientStats
     });
+
+    // Dump the stats to a file for later
+    var logMsg = new Date().getTime() + ': ' + JSON.stringify(data.payload) + '\n';
+    fs.exists(statsFile, function(exists) {
+    if (!exists) {
+        fs.writeFile(statsFile, '');
+    }
+    fs.appendFile(statsFile, logMsg, function (err) {
+        if(err){
+            console.error("Writing to the stats log file failed. This isn't catastrophic, but stats are nice.");
+        }
+    });
+});
+
   }
   else{
     console.log('Unknown message received:');
