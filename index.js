@@ -23,6 +23,7 @@ var clientStats = {
 var client_id = 0, problem_id = 0;
 
 var statsFile = 'stats.log';
+
 var width = 20,
     height = 20;
 
@@ -88,26 +89,28 @@ server.listen(8787, function() {
 // process a message from the client
 function process(data){
   if(data.respondingTo === 'processIteration'){
-    var p = data.payload || {};
-    Object.keys(p).forEach(function(k){
+      var iterationId = data.payload[1].generation;
+      var iterationResult = data.payload[1].result;
 
-      var populate = populator[k];
-      var solution = p[k].split('').map(function(d){return d === '1'});
+    var p = data.payload[1].result || {};
 
-      if(populate){
-        writeSquare(solution, populate.x, populate.y, populate.width, populate.height)
-      }
+    io.emit('state', {
+      world:world,
+      clientStats:clientStats
+    });
 
-      // clean up
-      delete populator[k]
-
-
-      io.emit('state', {
-        world:world,
-        clientStats:clientStats
-      });
-
-    })
+    // Object.keys(p).forEach(function(k){
+    //
+    //   var populate = populator[k];
+    //   var solution = p[k].split('').map(function(d){return d === '1'});
+    //
+    //   if(populate){
+    //     writeSquare(solution, populate.x, populate.y, populate.width, populate.height)
+    //   }
+    //
+    //   // clean up
+    //   delete populator[k]
+    // })
   }
   else if(data.action === 'consumeTestResults'){
     clientStats.testsRun += data.payload.testsRun;
@@ -157,13 +160,11 @@ function dispatch(client, x, y, w, h){
 
   var request = {
     action: "processIteration",
-    payload: {}
+    payload: {
+        generation: problem_id,
+        result: readSquare(x, y, w, h).map(function(x){return x ? '1':'0'}).join('')
+    }
   }
-
-  var problem = readSquare(x, y, w, h)
-
-  request.payload[id] = problem.map(function(x){return x ? '1':'0'}).join('');
-
   clients[client].write(JSON.stringify(request) + '\n');
 }
 
@@ -185,15 +186,13 @@ io.on('connection', function (socket) {
 });
 
 
-
+// Repeatedly ask for the next generation
 setInterval(function(){
-
   // ask a player for a solution to part of the world
   var player = Object.keys(clients)[0];
-  if(player){
+  if(player != null){
     dispatch(player, 0, 0, 10, 10);
   }
-
 }, 1000)
 
 
