@@ -10,6 +10,20 @@
 <body>
   <canvas id="world" width="500" height="500"></canvas>
 
+  <h3>Cumulative stats</h3>
+  <ul>
+      <li>
+          <span id="testsRun">0</span> tests run
+      </li>
+      <li>
+          <span id="testsFailed">0</span> tests failed
+      </li>
+      <li>
+          <span id="testsIgnored">0</span> tests ignored
+      </li>
+  </ul>
+
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var width = 20, height = 20;
@@ -25,6 +39,11 @@
           ctx.fillRect(x,y,1,1);
         }
       }
+
+      // Update client stats
+      document.getElementById("testsRun").innerHTML = data.clientStats.testsRun;
+      document.getElementById("testsFailed").innerHTML = data.clientStats.testsFailed;
+      document.getElementById("testsIgnored").innerHTML = data.clientStats.testsIgnored;
     });
 
 

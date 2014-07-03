@@ -14,7 +14,11 @@ app.use(express.static(__dirname + '/public'));
 
 // the connected clients that will increment the game together
 var clients = {}; // id: socket
-
+var clientStats = {
+    testsRun: 0,
+    testsFailed: 0,
+    testsIgnored: 0
+};
 var client_id = 0, problem_id = 0;
 
 var width = 20,
@@ -74,14 +78,13 @@ var server = net.createServer(function(c) {
 
 });
 
-server.listen(3001, function() {
-  console.log('listening for clients on *:3001');
+server.listen(8787, function() {
+  console.log('listening for clients on *:8787');
 });
 
 
 // process a message from the client
 function process(data){
-
   if(data.respondingTo === 'processIteration'){
     var p = data.payload || {};
     Object.keys(p).forEach(function(k){
@@ -98,10 +101,26 @@ function process(data){
 
 
       io.emit('state', {
-        world:world
+        world:world,
+        clientStats:clientStats
       });
 
     })
+  }
+  else if(data.action === 'consumeTestResults'){
+      console.log(data.payload);
+    clientStats.testsRun += data.payload.testsRun;
+    clientStats.testsFailed += data.payload.testsFailed;
+    clientStats.testsIgnored += data.payload.testsIgnored;
+
+    io.emit('state', {
+      world:world,
+      clientStats:clientStats
+    });
+  }
+  else{
+    console.log('Unknown message received:');
+    console.log(data);
   }
 }
 
@@ -136,7 +155,8 @@ function dispatch(client, x, y, w, h){
 
 io.on('connection', function (socket) {
   socket.emit('state', {
-    world:world
+    world:world,
+    clientStats: clientStats
   });
 
   socket.on('on', function (data) {
