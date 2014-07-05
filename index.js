@@ -7,6 +7,7 @@ var JSONStream = require('JSONStream');
 var es = require('event-stream');
 var fs = require('fs');
 
+var reference = require('./referenceClient')
 
 app.use(express.static(__dirname + '/public'));
 
@@ -109,10 +110,10 @@ function process(clientId, data) {
 
       var tickResult = data.payload[latestResult].result;
       var lastTick = clientWorlds[clientId].slice(0);
-      var nextTick = tickBoard(lastTick);
+      var nextTick = reference.tickBoard(lastTick);
 
       // validate against reference
-      //FIXME!
+      //FIXME do some validation
 
       // update reference
       clientWorlds[clientId] = nextTick;
@@ -120,9 +121,13 @@ function process(clientId, data) {
     else if(data.respondingTo === 'tickCell'){
       var latestResult = data.payload[0].generation > data.payload[1].generation ? 0 : 1;
       var generationId = data.payload[latestResult].generation;
+
       var tickResult = data.payload[latestResult].result;
+			var lastTick = clientWorlds[clientId].slice(0);
+			var nextTick = reference.tickCell(lastTick);
       console.dir(clientId + ':' + generationId + " => "+ tickResult);
 
+      // FIXME update the board with the next cell
 
     }
     else if (data.respondingTo === 'processIteration') {
@@ -235,13 +240,3 @@ setInterval(function () {
 http.listen(3000, function() {
 	console.log('listening on *:3000');
 });
-
-
-// Reference implementations of client ticks
-function tickBoard(lastTick){
-  return [{x:1, y:1}];
-}
-
-function tickCell(lastTick){
-  return lastTick;
-}
