@@ -1,19 +1,21 @@
 # Prerequisites
 
-* A relatively up-to-date installation of Python
-* pip package manager
+* Python 2.7 or 3.4
+* Virtualenv (python virtual environment utility)
 
 
 ## Getting set up
 
-Grab the client with `pip install coderetreat`
+* Set up a virtual environment with `virtualenv .`
+* Activate your environment with `source bin/activate`
+* Grab the client with `pip install jsox-code-retreat`
 
 ## Starting a session
 
 Tests and code live in the same file. To get started you might use the following template:
 
 ```python
-# TODO!
+cr path/to/my/session.py
 ```
 
 ## Running tests
@@ -22,4 +24,8 @@ Run `cr path/to/my/session.py`. The client will watch the file for changes and p
 
 ## Writing tests
 
-TODO!
+We're using [pytest](http://pytest.org/latest/) which will be installed when you pip the runner.
+
+Make sure your test functions start with `test_`.
+
+py.test users bare asserts with standard python comparison operaters like so `assert 'foo' == 'foo'`.
