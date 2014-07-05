@@ -1,6 +1,7 @@
 
 exports.tickCell = function(generation0){
-    var liveCellsIncludingSelf = generation0.match(/1/g);
+  console.log(generation0);
+    var liveCellsIncludingSelf = generation0.match(/1/g) || 0;
     if(generation0[4] === '1'){
 
       //Any live cell with fewer than two live neighbours dies, as if caused by under-population.
@@ -32,8 +33,6 @@ exports.tickCell = function(generation0){
 }
 
 exports.tickBoard = function(generation0){
-    console.log( 'Board >>>');
-    console.log(generation0);
-    generation0.unshift([111,111]);
-    return  [{x:1, y:1}];
+  //FIXME implement!
+  return generation0;
 }

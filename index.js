@@ -33,49 +33,64 @@ var width = 20,
 	height = 20;
 
 // todo - use buffer
-var world = new Array();
+var world = [];
 
+var tempWorld = new Array(width * height);
 for (var x = 0; x < width; x++) {
   for (var y = 0; y < height; y++) {
-    if(Math.random() > .5){
-      world.push({x: x, y:y});
-    }
+    tempWorld[ x + (y*width)] = Math.random() > .5;
   }
+}
+writeSquareFromArray(tempWorld, 0, 0, width, height);
+
+function getKeyFromXY(x, y){
+	return x + ':' + y
+}
+function getXYFromKey(key){
+	var coords = key.split(':');
+	return {
+		x: coords[0],
+		y: coords[1]
+	};
 }
 
 // read and write parts of the world
 // world, w, h are set
-// function writeSquare(data, x, y, w, h){
-//   for(var i = 0; i < w; i++){
-//     for(var j = 0; j < h; j++){
-//       world[ i+x + ((j+y)*width)] = !! data[i + (j*w)];
-//     }
-//   }
-// }
+function writeSquareFromArray(data, x, y, w, h){
+  for(var i = 0; i < w; i++){
+    for(var j = 0; j < h; j++){
+      if(!! data[i + (j*w)]){
+				world[getKeyFromXY(x+i, y+j)] = true;
+			}
+    }
+  }
+}
 
-function readSquare(x, y, w, h) {
+function readSquareToArray(x, y, w, h) {
 	var data = new Array(w * h);
 	for (var i = 0; i < w; i++) {
 		for (var j = 0; j < h; j++) {
-			data[i + (j * w)] = world[i + x + ((j + y) * width)];
+			data[i + (j * w)] = !!world[getKeyFromXY(x+i, y+j)];
 		}
 	}
 	return data;
 }
 
+function toIndexOfKey(cell) {
+	return cell.x + ":" + cell.y
+	}
 
-
-// this maps responses to where the world should be updated
-var populator = {
-	/* g0:{x:0, y:0, width:5, height:5 } */
+function toBinaryString(arrayOfBooleans){
+	return arrayOfBooleans.map(function (value) {
+		return value ? 1 : 0;
+	}).join('');
 }
-
 
 
 var server = net.createServer(function(c) {
 	var id = client_id++;
 	clients[id] = c;
-  clientWorlds[id] = world.slice(0);
+  clientWorlds[id] = readSquareToArray(0,0, width, height)
 
 	console.log('client ' + id + ' connected');
 
@@ -137,7 +152,7 @@ function process(clientId, data) {
 			var p = data.payload[1].result || {};
 
 			io.emit('state', {
-				world: world,
+				world: readSquareToArray(0,0, width, height),
 				clientStats: clientStats
 			});
 
@@ -160,7 +175,7 @@ function process(clientId, data) {
 			clientStats.testsIgnored += data.payload.testsIgnored;
 
 			io.emit('state', {
-				world: world,
+				world: readSquareToArray(0,0, width, height),
 				clientStats: clientStats
 			});
 
@@ -189,6 +204,30 @@ function process(clientId, data) {
 }
 
 function tickEverything(generationId){
+	// First close off the previous generation (time out anything we haven't received yet)
+	var nextTick = [];
+	// FIXME replace with tickBoard from referenceClient
+	Object.keys(world).forEach(function (liveCell, index, array) {
+		var cell = getXYFromKey(liveCell);
+		// calculate for every neighbour too
+		for (var x = -1; x <= 1; x++) {
+			for (var y = -1; y <= 1; y++) {
+				var cellX = cell.x-1 + x;
+				var cellY = cell.y-1 + y;
+				var binaryString = toBinaryString(readSquareToArray(cellX-1, cellY-1, 3, 3));
+				if(reference.tickCell(binaryString)){
+					nextTick[toIndexOfKey({x:cellX, y:cellY})] = true;
+				}
+			}
+		}
+	})
+	world = nextTick;
+	io.emit('state', {
+		world: readSquareToArray(0,0, width, height),
+		clientStats: clientStats
+	});
+
+	// The start a new generation
   var activeClients = Object.keys(clients).filter(function (clientId) { return clientId != null; })
 
   // Send out tick request for each client's board
@@ -200,8 +239,13 @@ function tickEverything(generationId){
   });
 
   // Send out tick request for each cell
-  // FIXME
-
+	if(activeClients.length > 0){
+		Object.keys(world).forEach(function (liveCell, index, array) {
+			var cell = getXYFromKey(liveCell);
+			var binaryString = toBinaryString(readSquareToArray(cell.x-1, cell.y-1, 3, 3));
+			sendCommand(activeClients[index % activeClients.length], 'tickCell', binaryString)
+		})
+	}
 }
 
 function sendCommand(clientId, action, payload){
@@ -214,7 +258,7 @@ function sendCommand(clientId, action, payload){
 
 io.on('connection', function(socket) {
 	socket.emit('state', {
-		world: world,
+		world: readSquareToArray(0,0, width, height),
 		clientStats: clientStats
 	});
 
