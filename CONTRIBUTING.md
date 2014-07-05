@@ -86,6 +86,8 @@ The message structure is as follows:
   "action": "tickCell",
   "payload": {
       "generation": 12,
+      "x": 4,
+      "y": 12,
       "result": "000010010"
     }
 }
@@ -94,11 +96,14 @@ Responses should include the received payload in the response, with the result b
 ```json
 {
   "success": true,
-  "respondingTo": "Cell",
-  "payload":[
-    {"generation": 12, "result": "010010010" },
-    {"generation": 13, "result": false }
-  ]
+  "respondingTo": "tickCell",
+  "payload":{
+    "generation": 12,
+    "lives": true,
+    "from: "010010010",
+    "x": 4,
+    "y": 12
+  }
 }
 ```
 
