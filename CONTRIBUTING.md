@@ -97,9 +97,12 @@ Responses should include the received payload in the response, with the result b
 {
   "success": true,
   "respondingTo": "tickCell",
-  "payload":[
-    {"generation": 12, "x": 4, "y": 12, "result": "010010010" },
-    {"generation": 13, "x": 4, "y": 12, "result": false }
+  "payload":{
+    "generation": 12,
+    "lives": true,
+    "from: "010010010",
+    "x": 4, 
+    "y": 12
   ]
 }
 ```
