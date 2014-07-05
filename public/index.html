@@ -43,6 +43,10 @@
           </li>
       </ul>
     </div>
+    <div class="col-sm-3">
+      <h3></h3>
+      <button id="resetWorld" class="btn btn-primary btn-lg btn-block" type="button">Reset board</button>
+    </div>
   </div>
 
 
@@ -51,7 +55,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    var width = 20, height = 20;
+    var width = 100, height = 100;
 
     var socket = io();
     var ctx = world.getContext('2d');
@@ -75,7 +79,9 @@
       document.getElementById("testsIgnored").innerHTML = data.clientStats.testsIgnored;
     });
 
-
+    document.getElementById("resetWorld").addEventListener('mouseup', function () {
+      socket.emit('resetWorld');
+    });
 
     var lastI;
 

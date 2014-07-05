@@ -29,20 +29,25 @@ var client_id = 0,
 
 var statsFile = 'stats.log';
 
-var width = 20,
-	height = 20;
+var width = 100,
+	height = 100;
 
 // todo - use buffer
 var world = [];
 var correctClientWorld = []; // collect client response correctness here
 
-var tempWorld = new Array(width * height);
-for (var x = 0; x < width; x++) {
-  for (var y = 0; y < height; y++) {
-    tempWorld[ x + (y*width)] = Math.random() > .5;
-  }
+resetWorld();
+
+function resetWorld(){
+	console.log("Resetting world");
+	var tempWorld = new Array(width * height);
+	for (var x = 0; x < width; x++) {
+		for (var y = 0; y < height; y++) {
+			tempWorld[ x + (y*width)] = Math.random() > .5;
+		}
+	}
+	writeSquareFromArray(tempWorld, 0, 0, width, height);
 }
-writeSquareFromArray(tempWorld, 0, 0, width, height);
 
 function getKeyFromXY(x, y){
 	return x + ':' + y
@@ -274,6 +279,10 @@ io.on('connection', function(socket) {
 		}
 	});
 
+	socket.on('resetWorld', function(data) {
+		resetWorld();
+	});
+
 });
 
 
@@ -281,7 +290,7 @@ io.on('connection', function(socket) {
 setInterval(function () {
 	generationId++;
   tickEverything(generationId);
-}, 2000)
+}, 1000)
 
 
 http.listen(3000, function() {
