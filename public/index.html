@@ -1,27 +1,52 @@
 <html>
 <head>
   <title>Life</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="vendor/bs/css/bootstrap.min.css">
   <style type="text/css">
     body{
       margin:0;
     }
+
+    #world {
+
+      padding-left: 0;
+      padding-right: 0;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+      width: 500px;
+    }
   </style>
 </head>
 <body>
-  <canvas id="world" width="500" height="500"></canvas>
 
-  <h3>Cumulative stats</h3>
-  <ul>
-      <li>
-          <span id="testsRun">0</span> tests run
-      </li>
-      <li>
-          <span id="testsFailed">0</span> tests failed
-      </li>
-      <li>
-          <span id="testsIgnored">0</span> tests ignored
-      </li>
-  </ul>
+  <div>
+    <canvas id="world" width="500" height="500" style="border: 1px solid;"></canvas>
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-3">
+      <h3>Cumulative stats</h3>
+      <ul>
+          <li>
+              <span id="testsRun">0</span> tests run
+          </li>
+          <li>
+              <span id="testsFailed">0</span> tests failed
+          </li>
+          <li>
+              <span id="testsIgnored">0</span> tests ignored
+          </li>
+      </ul>
+    </div>
+  </div>
+
+
+
 
 
   <script src="/socket.io/socket.io.js"></script>
@@ -51,10 +76,9 @@
     var lastI;
 
     world.addEventListener('mousemove', function(e){
-      console.log(e);
-      var x = Math.floor((e.pageX/world.width)*width),
-          y = Math.floor((e.pageY/world.height)*height);
-
+      var rect = world.getBoundingClientRect();
+      var x = Math.floor(((e.pageX - rect.left)/world.width)*width),
+          y = Math.floor(((e.pageY - rect.top)/world.height)*height);
       if(lastI!=(x + (y*width))){
         lastI=(x + (y*width))
 
