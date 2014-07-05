@@ -34,6 +34,7 @@ var width = 20,
 
 // todo - use buffer
 var world = [];
+var correctClientWorld = []; // collect client response correctness here
 
 var tempWorld = new Array(width * height);
 for (var x = 0; x < width; x++) {
@@ -66,11 +67,21 @@ function writeSquareFromArray(data, x, y, w, h){
   }
 }
 
-function readSquareToArray(x, y, w, h) {
+function readWorldSquareToArray(x, y, w, h) {
 	var data = new Array(w * h);
 	for (var i = 0; i < w; i++) {
 		for (var j = 0; j < h; j++) {
 			data[i + (j * w)] = !!world[getKeyFromXY(x+i, y+j)];
+		}
+	}
+	return data;
+}
+
+function readSquareToArray(thisWorld, x, y, w, h){
+	var data = new Array(w * h);
+	for (var i = 0; i < w; i++) {
+		for (var j = 0; j < h; j++) {
+			data[i + (j * w)] = thisWorld[getKeyFromXY(x+i, y+j)];
 		}
 	}
 	return data;
@@ -90,7 +101,7 @@ function toBinaryString(arrayOfBooleans){
 var server = net.createServer(function(c) {
 	var id = client_id++;
 	clients[id] = c;
-  clientWorlds[id] = readSquareToArray(0,0, width, height)
+  clientWorlds[id] = readWorldSquareToArray(0,0, width, height)
 
 	console.log('client ' + id + ' connected');
 
@@ -119,6 +130,7 @@ function process(clientId, data) {
 		if (data.success === false) {
 			// We'll not worry and just ignore it for now
 		}
+
     else if(data.respondingTo === 'tickBoard'){
       var latestResult = data.payload[0].generation > data.payload[1].generation ? 0 : 1;
       var generationId = data.payload[latestResult].generation;
@@ -133,51 +145,22 @@ function process(clientId, data) {
       // update reference
       clientWorlds[clientId] = nextTick;
     }
+
     else if(data.respondingTo === 'tickCell'){
-      var latestResult = data.payload[0].generation > data.payload[1].generation ? 0 : 1;
-      var generationId = data.payload[latestResult].generation;
 
-      var tickResult = data.payload[latestResult].result;
-			var lastTick = clientWorlds[clientId].slice(0);
-			var nextTick = reference.tickCell(lastTick);
-      console.dir(clientId + ':' + generationId + " => "+ tickResult);
+			var x = data.payload.x;
+			var y = data.payload.y;
+			var from = data.payload.from;
+			var lives = data.payload.lives
+			var shouldLive = reference.tickCell(data.payload.from);
 
-      // FIXME update the board with the next cell
-
+			correctClientWorld[getKeyFromXY(x, y)] = (lives == shouldLive);
     }
-    else if (data.respondingTo === 'processIteration') {
-			var iterationId = data.payload[1].generation;
-			var iterationResult = data.payload[1].result;
 
-			var p = data.payload[1].result || {};
-
-			io.emit('state', {
-				world: readSquareToArray(0,0, width, height),
-				clientStats: clientStats
-			});
-
-			// Object.keys(p).forEach(function(k){
-			//
-			//   var populate = populator[k];
-			//   var solution = p[k].split('').map(function(d){return d === '1'});
-			//
-			//   if(populate){
-			//     writeSquare(solution, populate.x, populate.y, populate.width, populate.height)
-			//   }
-			//
-			//   // clean up
-			//   delete populator[k]
-			// })
-		}
     else if (data.action === 'consumeTestResults') {
 			clientStats.testsRun += data.payload.testsRun;
 			clientStats.testsFailed += data.payload.testsFailed;
 			clientStats.testsIgnored += data.payload.testsIgnored;
-
-			io.emit('state', {
-				world: readSquareToArray(0,0, width, height),
-				clientStats: clientStats
-			});
 
 			// Dump the stats to a file for later
 			var logMsg = new Date().getTime() + ': ' + JSON.stringify(data.payload) + '\n';
@@ -192,19 +175,27 @@ function process(clientId, data) {
 				});
 			});
 		} else {
-			console.log('Unknown message received:');
-			console.log(data);
+			console.error('Unknown message received:');
+			console.error(data);
 		}
 	} catch (e) {
 		// Something went wrong, it was probably the input from the client. Crack on!
-		console.log('Unknown message received:');
-		console.log(data);
-    console.error(e);
+		console.error('Unknown message received:');
+		console.error(data);
 	}
 }
 
 function tickEverything(generationId){
 	// First close off the previous generation (time out anything we haven't received yet)
+
+// Update the UI
+io.emit('state', {
+	correct: readSquareToArray(correctClientWorld, 0,0, width, height),
+	world: readWorldSquareToArray(0,0, width, height),
+	clientStats: clientStats
+});
+
+	// generate the next generation
 	var nextTick = [];
 	// FIXME replace with tickBoard from referenceClient
 	Object.keys(world).forEach(function (liveCell, index, array) {
@@ -214,7 +205,7 @@ function tickEverything(generationId){
 			for (var y = -1; y <= 1; y++) {
 				var cellX = cell.x-1 + x;
 				var cellY = cell.y-1 + y;
-				var binaryString = toBinaryString(readSquareToArray(cellX-1, cellY-1, 3, 3));
+				var binaryString = toBinaryString(readWorldSquareToArray(cellX-1, cellY-1, 3, 3));
 				if(reference.tickCell(binaryString)){
 					nextTick[toIndexOfKey({x:cellX, y:cellY})] = true;
 				}
@@ -222,15 +213,14 @@ function tickEverything(generationId){
 		}
 	})
 	world = nextTick;
-	io.emit('state', {
-		world: readSquareToArray(0,0, width, height),
-		clientStats: clientStats
-	});
+
+
 
 	// The start a new generation
-  var activeClients = Object.keys(clients).filter(function (clientId) { return clientId != null; })
+	correctClientWorld = []; //start over
 
   // Send out tick request for each client's board
+	var activeClients = Object.keys(clients).filter(function (clientId) { return clientId != null; });
   activeClients.forEach(function (clientId) {
     sendCommand(clientId, 'tickBoard', {
       generation: generationId,
@@ -242,8 +232,20 @@ function tickEverything(generationId){
 	if(activeClients.length > 0){
 		Object.keys(world).forEach(function (liveCell, index, array) {
 			var cell = getXYFromKey(liveCell);
-			var binaryString = toBinaryString(readSquareToArray(cell.x-1, cell.y-1, 3, 3));
-			sendCommand(activeClients[index % activeClients.length], 'tickCell', binaryString)
+			// calculate for every neighbour too
+			for (var x = -1; x <= 1; x++) {
+				for (var y = -1; y <= 1; y++) {
+					var cellX = cell.x-1 + x;
+					var cellY = cell.y-1 + y;
+					var binaryString = toBinaryString(readWorldSquareToArray(cellX-1, cellY-1, 3, 3));
+					sendCommand(activeClients[index % activeClients.length], 'tickCell', {
+						generation: generationId,
+						x: cellX,
+						y: cellY,
+						result: binaryString
+						});
+				}
+			}
 		})
 	}
 }
@@ -258,7 +260,8 @@ function sendCommand(clientId, action, payload){
 
 io.on('connection', function(socket) {
 	socket.emit('state', {
-		world: readSquareToArray(0,0, width, height),
+		correct: readSquareToArray(correctClientWorld, 0,0, width, height),
+		world: readWorldSquareToArray(0,0, width, height),
 		clientStats: clientStats
 	});
 
@@ -276,9 +279,9 @@ io.on('connection', function(socket) {
 
 // Repeatedly ask for the next generation
 setInterval(function () {
+	generationId++;
   tickEverything(generationId);
-  generationId++;
-}, 1000)
+}, 2000)
 
 
 http.listen(3000, function() {

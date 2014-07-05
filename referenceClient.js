@@ -1,6 +1,5 @@
 
 exports.tickCell = function(generation0){
-  console.log(generation0);
     var liveCellsIncludingSelf = generation0.match(/1/g) || 0;
     if(generation0[4] === '1'){
 

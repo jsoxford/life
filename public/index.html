@@ -60,7 +60,11 @@
     socket.on('state', function(data){
       for(var x = 0; x < width; x++){
         for(var y = 0; y < height; y++){
-          ctx.fillStyle = data.world[x + (width*y)] ? '#fff' : '#000';
+          if(data.correct[x + (width*y)] === false){
+            ctx.fillStyle = data.world[x + (width*y)] ? '#FFC0CB' : '#FF2400';
+          }else{
+            ctx.fillStyle = data.world[x + (width*y)] ? '#000' : '#FFF';
+          }
           ctx.fillRect(x,y,1,1);
         }
       }
@@ -79,6 +83,7 @@
       var rect = world.getBoundingClientRect();
       var x = Math.floor(((e.pageX - rect.left)/world.width)*width),
           y = Math.floor(((e.pageY - rect.top)/world.height)*height);
+
       if(lastI!=(x + (y*width))){
         lastI=(x + (y*width))
 

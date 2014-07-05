@@ -94,7 +94,7 @@ Responses should include the received payload in the response, with the result b
 ```json
 {
   "success": true,
-  "respondingTo": "tickBoard",
+  "respondingTo": "Cell",
   "payload":[
     {"generation": 12, "result": "010010010" },
     {"generation": 13, "result": false }
