@@ -103,7 +103,7 @@ Responses should include the received payload in the response, with the result b
     "from: "010010010",
     "x": 4, 
     "y": 12
-  ]
+  }
 }
 ```
 
