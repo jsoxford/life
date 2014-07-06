@@ -110,11 +110,16 @@ var server = net.createServer(function(c) {
 
 	console.log('client ' + id + ' connected');
 
-	c.on('end', function() {
-		delete clients[id];
-    delete clientWorlds[id];
-		console.log('client ' + id + ' disconnected');
-	});
+    var deleteClient = function(err) {
+        if (clients[id]) {
+            delete clients[id];
+            delete clientWorlds[id];
+            console.log('client ' + id + ' disconnected' + (err ? ' (errored)' : ''));
+        }
+    };
+
+    c.on('end', deleteClient);
+    c.on('error', deleteClient);
 
 	c.pipe(JSONStream.parse(true))
 		.pipe(es.mapSync(function (data) {
