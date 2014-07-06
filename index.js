@@ -238,7 +238,10 @@ io.emit('state', {
     });
   });
 
-  // Send out tick request for each cell
+    // Hash to prevent sending the same cell twice
+    var sentCells = {};
+
+    // Send out tick request for each cell
 	if(activeClients.length > 0){
 		Object.keys(world).forEach(function (liveCell, index, array) {
 			var cell = getXYFromKey(liveCell);
@@ -247,13 +250,19 @@ io.emit('state', {
 				for (var y = -1; y <= 1; y++) {
 					var cellX = cell.x-1 + x;
 					var cellY = cell.y-1 + y;
-					var binaryString = toBinaryString(readWorldSquareToArray(cellX-1, cellY-1, 3, 3));
-					sendCommand(activeClients[index % activeClients.length], 'tickCell', {
-						generation: generationId,
-						x: cellX,
-						y: cellY,
-						result: binaryString
-						});
+                    var key = toIndexOfKey({x:cellX, y:cellY});
+
+                    if (!sentCells[key]) {
+                        sentCells[key] = true;
+
+    					var binaryString = toBinaryString(readWorldSquareToArray(cellX-1, cellY-1, 3, 3));
+    					sendCommand(activeClients[index % activeClients.length], 'tickCell', {
+    						generation: generationId,
+    						x: cellX,
+    						y: cellY,
+    						result: binaryString
+    					});
+                    }
 				}
 			}
 		})
